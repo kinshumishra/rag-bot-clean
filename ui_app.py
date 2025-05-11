@@ -1,5 +1,9 @@
 import os
 import streamlit as st
+st.set_page_config(page_title="🧠 RAG Bot", page_icon="📄", layout="centered")
+st.title("🧠 RAG PDF QA Bot")
+st.subheader("Ask questions from your uploaded medical document 📄")
+st.markdown("---")
 from langchain_community.document_loaders import PyPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import FAISS
@@ -56,3 +60,5 @@ if pdf_file:
         with st.expander("📚 Top Matching Chunks"):
             for i, doc in enumerate(results):
                 st.markdown(f"**Chunk #{i+1}:**\n{doc.page_content}")
+st.markdown("---")
+st.markdown("Made with ❤️ using LangChain, FAISS, HuggingFace, and Streamlit")
