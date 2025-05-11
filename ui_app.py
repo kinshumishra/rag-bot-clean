@@ -2,7 +2,7 @@ import os
 import streamlit as st
 st.set_page_config(page_title="🧠 RAG Bot", page_icon="📄", layout="centered")
 st.title("🧠 RAG PDF QA Bot")
-st.subheader("Ask questions from your uploaded medical document 📄")
+st.subheader("Ask questions from any document!")
 st.markdown("---")
 from langchain_community.document_loaders import PyPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
