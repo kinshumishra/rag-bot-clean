@@ -13,7 +13,7 @@ embedding_model = HuggingFaceEmbeddings(
     model_name="sentence-transformers/all-MiniLM-L6-v2"
 )
 groq_api_key = st.secrets["GROQ_API_KEY"] or os.getenv("GROQ_API_KEY")
-st.title(f"====={groq_api_key}")
+
 llm = ChatGroq(
     groq_api_key=groq_api_key,  # Pass API key here
     model="openai/gpt-oss-20b",
