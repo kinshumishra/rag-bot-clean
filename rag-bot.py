@@ -4,21 +4,33 @@ from langchain_community.document_loaders import PyPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import FAISS
 from langchain_community.embeddings import HuggingFaceEmbeddings
-from langchain.chat_models import ChatOpenAI
+
+# from langchain.chat_models import ChatOpenAI
 from langchain.schema import HumanMessage, SystemMessage
+from langchain_groq import ChatGroq
 
 # 🗝️ Set API config
-os.environ["OPENROUTER_API_KEY"] = "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"
-os.environ["OPENAI_API_BASE"] = "https://openrouter.ai/api/v1"
+# os.environ["OPENAI_API_KEY"] = (
+#     "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"
+# )
+# os.environ["OPENAI_API_BASE"] = "https://openrouter.ai/api/v1"
 
 # 🔠 Initialize embedding + LLM
-embedding_model = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
-llm = ChatOpenAI(
-    model_name="gpt-3.5-turbo",
-    temperature=0,
-    openai_api_base="https://openrouter.ai/api/v1",
-    openai_api_key=os.environ["OPENROUTER_API_KEY"]
+embedding_model = HuggingFaceEmbeddings(
+    model_name="sentence-transformers/all-MiniLM-L6-v2"
 )
+# llm = ChatOpenAI(
+#     model_name="openai/gpt-3.5-turbo",
+#     temperature=0,
+# )
+llm = ChatGroq(
+    groq_api_key=os.getenv("GROQ_API_KEY"),  # Pass API key here
+    model="llama3-8b-8192",
+    temperature=0.7,
+    max_tokens=2000,  # Use max_tokens here
+)
+print(f"Using LLM: {llm.__class__.__name__}")
+
 
 # 🧠 App UI
 st.title("🧠 RAG Chatbot for PDFs")
@@ -40,8 +52,11 @@ if pdf_file:
     vectorstore = FAISS.from_documents(chunks, embedding_model)
 
     with st.form("qa_form"):
-    query = st.text_input("🔎 **Ask your question**", placeholder="e.g. What are the symptoms of diabetes?")
-    submit = st.form_submit_button("Get Answer 💬")
+        query = st.text_input(
+            "🔎 **Ask your question**",
+            placeholder="e.g. What are the symptoms of diabetes?",
+        )
+        submit = st.form_submit_button("Get Answer 💬")
 
 if submit and query:
     with st.spinner("Thinking... 🤔"):
@@ -49,8 +64,10 @@ if submit and query:
         context = "\n\n".join([doc.page_content for doc in results])
 
         messages = [
-            SystemMessage(content="You are a helpful assistant answering only from the provided context."),
-            HumanMessage(content=f"Context:\n{context}\n\nQuestion:\n{query}")
+            SystemMessage(
+                content="You are a helpful assistant answering only from the provided context."
+            ),
+            HumanMessage(content=f"Context:\n{context}\n\nQuestion:\n{query}"),
         ]
 
         response = llm.invoke(messages)
@@ -61,4 +78,3 @@ if submit and query:
         with st.expander("📚 **See Top Matching Chunks**"):
             for i, doc in enumerate(results):
                 st.markdown(f"**Chunk #{i+1}:**\n{doc.page_content}")
-

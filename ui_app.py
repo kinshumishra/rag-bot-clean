@@ -1,32 +1,32 @@
 import os
 import streamlit as st
-st.set_page_config(page_title="🧠 RAG Bot", page_icon="📄", layout="centered")
-st.title("🧠 RAG PDF QA Bot")
-st.subheader("Ask questions from any document!")
-st.markdown("---")
 from langchain_community.document_loaders import PyPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import FAISS
 from langchain_community.embeddings import HuggingFaceEmbeddings
-from langchain.chat_models import ChatOpenAI
-from langchain.schema import HumanMessage, SystemMessage
 
-# 🗝️ Set API config
-os.environ["OPENROUTER_API_KEY"] = "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"  # 🔁 Replace with your real OpenRouter API key
-os.environ["OPENAI_API_BASE"] = "https://openrouter.ai/api/v1"
+from langchain.schema import HumanMessage, SystemMessage
+from langchain_groq import ChatGroq
 
 # 🔠 Initialize embedding + LLM
-embedding_model = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
-llm = ChatOpenAI(
-    model_name="gpt-3.5-turbo",
-    temperature=0,
-    openai_api_base="https://openrouter.ai/api/v1",
-    openai_api_key=os.environ["OPENROUTER_API_KEY"]
+embedding_model = HuggingFaceEmbeddings(
+    model_name="sentence-transformers/all-MiniLM-L6-v2"
 )
+
+llm = ChatGroq(
+    groq_api_key=os.getenv("GROQ_API_KEY"),  # Pass API key here
+    model="openai/gpt-oss-20b",
+    temperature=0.7,
+    max_tokens=2000,  # Use max_tokens here
+)
+print(f"Using LLM: {llm.__class__.__name__}")
+
 
 # 🧠 App UI
 st.title("🧠 RAG Chatbot for PDFs")
 
+st.markdown("---")
+st.markdown("Made with ❤️ by Siddharth Mishra")
 pdf_file = st.file_uploader("📄 Upload a PDF", type="pdf")
 
 if pdf_file:
@@ -41,24 +41,30 @@ if pdf_file:
 
     vectorstore = FAISS.from_documents(chunks, embedding_model)
 
-    query = st.text_input("❓ Ask a question about the document")
+    with st.form("qa_form"):
+        query = st.text_input(
+            "🔎 **Ask your question**",
+            placeholder="e.g. What are the symptoms of diabetes?",
+        )
+        submit = st.form_submit_button("Get Answer 💬")
 
-    if query:
-        results = vectorstore.similarity_search(query, k=3)
-        context = "\n\n".join([doc.page_content for doc in results])
+        if submit and query:  # ✅ Move inside form block
+            with st.spinner("Thinking... 🤔"):
+                results = vectorstore.similarity_search(query, k=3)
+                context = "\n\n".join([doc.page_content for doc in results])
 
-        messages = [
-            SystemMessage(content="You are a helpful assistant answering only from the provided context."),
-            HumanMessage(content=f"Context:\n{context}\n\nQuestion:\n{query}")
-        ]
+                messages = [
+                    SystemMessage(
+                        content="You are a helpful assistant answering only from the provided context."
+                    ),
+                    HumanMessage(content=f"Context:\n{context}\n\nQuestion:\n{query}"),
+                ]
 
-        response = llm.invoke(messages)
+                response = llm.invoke(messages)
 
-        st.markdown("### 💬 GPT Answer")
-        st.write(response.content)
+                st.markdown("### 💡 **Answer**")
+                st.success(response.content)
 
-        with st.expander("📚 Top Matching Chunks"):
-            for i, doc in enumerate(results):
-                st.markdown(f"**Chunk #{i+1}:**\n{doc.page_content}")
-st.markdown("---")
-st.markdown("Made with ❤️ using LangChain, FAISS, HuggingFace, and Streamlit")
+                with st.expander("📚 **See Top Matching Chunks**"):
+                    for i, doc in enumerate(results):
+                        st.markdown(f"**Chunk #{i+1}:**\n{doc.page_content}")
