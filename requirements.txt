@@ -6,3 +6,4 @@ faiss-cpu
 openai
 langchain-groq
 groq
+langchain_core
