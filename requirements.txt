@@ -1,9 +1,10 @@
-langchain-community
 streamlit
+langchain-core
+langchain-community
+langchain-groq
 pypdf
 sentence-transformers
 faiss-cpu
 openai
-langchain-groq
 groq
-langchain_core
+python-dotenv
