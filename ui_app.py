@@ -12,7 +12,7 @@ from langchain_groq import ChatGroq
 embedding_model = HuggingFaceEmbeddings(
     model_name="sentence-transformers/all-MiniLM-L6-v2"
 )
-groq_api_key = st.secrets["GROQ_API_KEY"] or os.getenv("GROQ_API_KEY")
+groq_api_key = os.getenv("GROQ_API_KEY") or st.secrets.get("GROQ_API_KEY")
 
 llm = ChatGroq(
     groq_api_key=groq_api_key,  # Pass API key here
